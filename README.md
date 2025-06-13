@@ -4,7 +4,10 @@ PhotoFilter is an Android application that allows users to apply different filte
 
 ## Screenshots
 
-TODO
+<p>
+<img src="https://raw.githubusercontent.com/andreilia21/PhotoFilter/refs/heads/master/public/screenshot1.jpg" width="400"/>
+<img src="https://raw.githubusercontent.com/andreilia21/PhotoFilter/refs/heads/master/public/screenshot2.jpg" width="400"/>
+</p>
 
 ## License
 

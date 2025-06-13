@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import by.andreilia.photofilter.ui.theme.AppTheme
+import jp.co.cyberagent.android.gpuimage.GPUImage
 
 @Preview(showSystemUi = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -75,7 +76,7 @@ fun ScreenPreview() {
                 previews = ImageFilter.entries.map {
                     FilterPreview(
                         filter = it,
-                        bitmap = it.applyTo(imageBitmap, 0.9f)
+                        bitmap = it.applyTo(GPUImage(context), imageBitmap, 0.9f)
                     )
                 },
                 intensity = 0.5f

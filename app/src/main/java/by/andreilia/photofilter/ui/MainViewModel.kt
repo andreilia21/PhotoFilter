@@ -1,6 +1,5 @@
 package by.andreilia.photofilter.ui
 
-import android.R.attr.bitmap
 import android.app.Application
 import android.content.Context
 import android.content.Intent
@@ -14,6 +13,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import jp.co.cyberagent.android.gpuimage.GPUImage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +35,8 @@ class MainViewModel(
 
     private val intensity = savedStateHandle.getStateFlow("intensity", 0.5f)
 
+    private val gpuImage = GPUImage(application)
+
     private val previews = selectedPhoto.map { bitmap ->
         if (bitmap == null) {
             emptyList()
@@ -42,11 +44,12 @@ class MainViewModel(
             filters.map {
                 FilterPreview(
                     filter = it,
-                    bitmap = it.applyTo(bitmap, 0.5f)
+                    bitmap = it.applyTo(gpuImage, bitmap, 0.5f)
                 )
             }
         }
     }
+
 
     val state: StateFlow<UiState> = selectedPhoto
         .combine(selectedFilter) { bitmap, filter -> bitmap to filter }
@@ -61,7 +64,7 @@ class MainViewModel(
                 UiState.NoPhotoSelected
             } else {
                 UiState.PhotoSelected(
-                    imageBitmap = filter.applyTo(bitmap, intensity),
+                    imageBitmap = filter.applyTo(gpuImage, bitmap, intensity),
                     filter = filter,
                     previews = previews,
                     intensity = intensity

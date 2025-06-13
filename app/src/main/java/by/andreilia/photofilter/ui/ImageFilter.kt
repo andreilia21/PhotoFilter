@@ -1,12 +1,9 @@
 package by.andreilia.photofilter.ui
 
-import android.graphics.Bitmap
 import android.graphics.PointF
-import android.os.Build
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.ImageBitmapConfig
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import by.andreilia.photofilter.R
@@ -57,15 +54,17 @@ enum class ImageFilter(
             intensity: Float
         ): ImageBitmap {
             gpuImage.setImage(bitmap.asAndroidBitmap())
-            gpuImage.setFilter(GPUImageVignetteFilter(
-                PointF(
-                    0.5f,
-                    0.5f
-                ),
-                FloatArray(3),
-                intensity * 0.5f,
-                0.7f
-            ))
+            gpuImage.setFilter(
+                GPUImageVignetteFilter(
+                    PointF(
+                        0.5f,
+                        0.5f
+                    ),
+                    FloatArray(3),
+                    intensity * 0.5f,
+                    0.7f
+                )
+            )
             return gpuImage.bitmapWithFilterApplied.asImageBitmap()
         }
     },
@@ -82,29 +81,57 @@ enum class ImageFilter(
             gpuImage.setFilter(GPUImageNegativeFilter())
             return gpuImage.bitmapWithFilterApplied.asImageBitmap()
         }
-    }
+    },
+    OldTimes(
+        title = R.string.old_times,
+        intensityAvailable = true
+    ) {
+        override fun applyTo(
+            gpuImage: GPUImage,
+            bitmap: ImageBitmap,
+            intensity: Float
+        ): ImageBitmap {
+            gpuImage.setImage(bitmap.asAndroidBitmap())
+            gpuImage.setFilter(
+                GPUImageColorMatrixFilter(
+                    intensity,
+                    floatArrayOf(
+                        1.0f, 0.05f, 0.0f, 0.0f,
+                        -0.2f, 1.1f, -0.2f, 0.11f,
+                        0.2f, 0.0f, 1.0f, 0.0f,
+                        0.0f, 0.0f, 0.0f, 1.0f
+                    )
+                )
+            )
+            return gpuImage.bitmapWithFilterApplied.asImageBitmap()
+        }
+    },
+    Milk(
+        title = R.string.milk,
+        intensityAvailable = true
+    ) {
+        override fun applyTo(
+            gpuImage: GPUImage,
+            bitmap: ImageBitmap,
+            intensity: Float
+        ): ImageBitmap {
+            gpuImage.setImage(bitmap.asAndroidBitmap())
+            gpuImage.setFilter(
+                GPUImageColorMatrixFilter(
+                    intensity,
+                    floatArrayOf(
+                        0.0f, 1.0f, 0.0f, 0.0f,
+                        0.0f, 1.0f, 0.0f, 0.0f,
+                        0.0f, 0.64f, 0.5f, 0.0f,
+                        0.0f, 0.0f, 0.0f, 1.0f
+                    )
+                )
+            )
+            return gpuImage.bitmapWithFilterApplied.asImageBitmap()
+        }
+    },
     ;
 
     abstract fun applyTo(gpuImage: GPUImage, bitmap: ImageBitmap, intensity: Float): ImageBitmap
 }
 
-private fun ImageBitmapConfig.toBitmapConfig(): Bitmap.Config {
-    return when (this) {
-        ImageBitmapConfig.Argb8888 -> Bitmap.Config.ARGB_8888
-        ImageBitmapConfig.Alpha8 -> Bitmap.Config.ALPHA_8
-        ImageBitmapConfig.Rgb565 -> Bitmap.Config.RGB_565
-        ImageBitmapConfig.F16 -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Bitmap.Config.RGBA_F16
-        } else {
-            Bitmap.Config.ARGB_8888
-        }
-
-        ImageBitmapConfig.Gpu -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Bitmap.Config.HARDWARE
-        } else {
-            Bitmap.Config.ARGB_8888
-        }
-
-        else -> Bitmap.Config.ARGB_8888
-    }
-}

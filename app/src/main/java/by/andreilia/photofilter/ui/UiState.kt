@@ -10,7 +10,7 @@ sealed interface UiState {
     data class PhotoSelected(
         val imageBitmap: ImageBitmap,
         val filter: ImageFilter,
-        val filters: List<ImageFilter>,
+        val previews: List<FilterPreview>,
         val intensity: Float = 0.5f
     ) : UiState
 }

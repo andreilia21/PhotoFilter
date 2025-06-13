@@ -1,10 +1,7 @@
 package by.andreilia.photofilter.ui
 
-import android.R.attr.text
 import android.content.res.Configuration
-import android.graphics.BitmapFactory
 import android.net.Uri
-import androidx.activity.compose.R
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -74,7 +72,12 @@ fun ScreenPreview() {
             UiState.PhotoSelected(
                 imageBitmap = imageBitmap,
                 filter = ImageFilter.Original,
-                filters = ImageFilter.entries,
+                previews = ImageFilter.entries.map {
+                    FilterPreview(
+                        filter = it,
+                        bitmap = it.applyTo(imageBitmap, 0.9f)
+                    )
+                },
                 intensity = 0.5f
             )
         } else {
@@ -88,9 +91,9 @@ fun ScreenPreview() {
 }
 
 @Composable
-private fun FilterItem(
+private fun FilterPreviewItem(
     selected: Boolean,
-    filter: ImageFilter,
+    preview: FilterPreview,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -100,7 +103,7 @@ private fun FilterItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Box(
+        Image(
             modifier = Modifier
                 .height(84.dp)
                 .fillMaxWidth()
@@ -116,10 +119,12 @@ private fun FilterItem(
                 )
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 .clickable(onClick = onClick),
-        ) {
-        }
+            bitmap = preview.bitmap,
+            contentDescription = stringResource(preview.filter.title),
+            contentScale = ContentScale.Crop
+        )
         Text(
-            text = stringResource(filter.title),
+            text = stringResource(preview.filter.title),
             style = MaterialTheme.typography.labelSmall
         )
     }
@@ -171,7 +176,7 @@ fun PhotoFilterApp(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 val value = (state as? UiState.PhotoSelected)?.intensity
-                Slider(value = value ?: 0.5f, onValueChange = onIntensityChange)
+                Slider(value = value ?: 0.5f, onValueChange = onIntensityChange, enabled = state is UiState.PhotoSelected && state.filter.intensityAvailable)
             }
             Column(
                 modifier = Modifier
@@ -191,11 +196,11 @@ fun PhotoFilterApp(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(state.filters) {
-                            FilterItem(
-                                filter = it,
-                                selected = it == state.filter,
-                                onClick = { selectFilter(it) }
+                        items(state.previews) {
+                            FilterPreviewItem(
+                                preview = it,
+                                selected = it.filter == state.filter,
+                                onClick = { selectFilter(it.filter) }
                             )
                         }
                     }

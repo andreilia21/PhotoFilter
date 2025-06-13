@@ -1,5 +1,6 @@
 package by.andreilia.photofilter.ui
 
+import android.R.attr.bitmap
 import android.app.Application
 import android.content.Context
 import android.content.Intent
@@ -13,7 +14,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -35,20 +35,35 @@ class MainViewModel(
 
     private val intensity = savedStateHandle.getStateFlow("intensity", 0.5f)
 
+    private val previews = selectedPhoto.map { bitmap ->
+        if (bitmap == null) {
+            emptyList()
+        } else {
+            filters.map {
+                FilterPreview(
+                    filter = it,
+                    bitmap = it.applyTo(bitmap, 0.5f)
+                )
+            }
+        }
+    }
+
     val state: StateFlow<UiState> = selectedPhoto
         .combine(selectedFilter) { bitmap, filter -> bitmap to filter }
         .combine(intensity) { pair, intensity -> pair to intensity }
+        .combine(previews) { pair, previews -> pair to previews }
         .map {
-            val (pair, intensity) = it
-            val (bitmap, filter) = pair
+            val (pairToIntensity, previews) = it
+            val (bitmapToFilter, intensity) = pairToIntensity
+            val (bitmap, filter) = bitmapToFilter
 
             if (bitmap == null) {
                 UiState.NoPhotoSelected
             } else {
                 UiState.PhotoSelected(
-                    imageBitmap = bitmap,
+                    imageBitmap = filter.applyTo(bitmap, intensity),
                     filter = filter,
-                    filters = filters,
+                    previews = previews,
                     intensity = intensity
                 )
             }
@@ -82,7 +97,10 @@ private fun Context.loadBitmap(uri: Uri): Bitmap? {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
         // For Android P (API level 28) and higher, use ImageDecoder to decode the Bitmap
         val source = ImageDecoder.createSource(contentResolver, uri)
-        ImageDecoder.decodeBitmap(source)
+        ImageDecoder.decodeBitmap(source) { decoder, info, source ->
+            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+            decoder.isMutableRequired = true
+        }
     } else {
         // For versions prior to Android P, use BitmapFactory to decode the Bitmap
         val bitmap = contentResolver.openInputStream(uri)?.use { stream ->

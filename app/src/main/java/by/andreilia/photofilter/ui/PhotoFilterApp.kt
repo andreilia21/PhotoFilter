@@ -1,12 +1,17 @@
 package by.andreilia.photofilter.ui
 
+import android.R.attr.text
 import android.content.res.Configuration
+import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.activity.compose.R
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddBox
@@ -35,19 +41,87 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import by.andreilia.photofilter.ui.theme.AppTheme
 
 @Preview(showSystemUi = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun ScreenPreview() {
+
+    val context = LocalContext.current
+
+    val imageBitmap = remember {
+        ContextCompat.getDrawable(
+            context,
+            by.andreilia.photofilter.R.drawable.ic_launcher_background
+        )?.toBitmap()?.asImageBitmap()
+    }
+
+    val state = remember {
+        if (imageBitmap != null) {
+            UiState.PhotoSelected(
+                imageBitmap = imageBitmap,
+                filter = ImageFilter.Original,
+                filters = ImageFilter.entries,
+                intensity = 0.5f
+            )
+        } else {
+            UiState.NoPhotoSelected
+        }
+    }
+
     AppTheme {
-        PhotoFilterApp(state = UiState.NoPhotoSelected, {})
+        PhotoFilterApp(state = state, selectPhoto = {}, onIntensityChange = {}, selectFilter = {})
+    }
+}
+
+@Composable
+private fun FilterItem(
+    selected: Boolean,
+    filter: ImageFilter,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .width(64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .height(84.dp)
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .then(
+                    if (selected)
+                        Modifier.border(
+                            width = 2.dp,
+                            color = Color.White,
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                    else Modifier
+                )
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .clickable(onClick = onClick),
+        ) {
+        }
+        Text(
+            text = stringResource(filter.title),
+            style = MaterialTheme.typography.labelSmall
+        )
     }
 }
 
@@ -55,6 +129,8 @@ fun ScreenPreview() {
 fun PhotoFilterApp(
     state: UiState,
     selectPhoto: (Uri) -> Unit,
+    onIntensityChange: (Float) -> Unit,
+    selectFilter: (ImageFilter) -> Unit
 ) {
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -94,7 +170,8 @@ fun PhotoFilterApp(
             Row(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Slider(value = 0.5f, onValueChange = {})
+                val value = (state as? UiState.PhotoSelected)?.intensity
+                Slider(value = value ?: 0.5f, onValueChange = onIntensityChange)
             }
             Column(
                 modifier = Modifier
@@ -102,27 +179,31 @@ fun PhotoFilterApp(
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainer)
                     .padding(vertical = 16.dp)
-                    .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
+                    .padding(
+                        bottom = WindowInsets.navigationBars.asPaddingValues()
+                            .calculateBottomPadding()
+                    )
             ) {
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .width(64.dp)
-                                .height(84.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                        ) {
-
+                if (state is UiState.PhotoSelected) {
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(state.filters) {
+                            FilterItem(
+                                filter = it,
+                                selected = it == state.filter,
+                                onClick = { selectFilter(it) }
+                            )
                         }
                     }
+                    HorizontalDivider(
+                        Modifier.padding(vertical = 12.dp),
+                        color = DividerDefaults.color.copy(alpha = 0.5f)
+                    )
                 }
-                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = DividerDefaults.color.copy(alpha = 0.5f))
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()

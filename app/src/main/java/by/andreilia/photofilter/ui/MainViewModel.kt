@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -57,6 +58,11 @@ class MainViewModel(
             initialValue = UiState.NoPhotoSelected
         )
 
+    fun selectFilter(filter: ImageFilter) {
+        viewModelScope.launch {
+            selectedFilter.emit(filter)
+        }
+    }
 
     fun selectPhoto(uri: Uri) {
         viewModelScope.launch {

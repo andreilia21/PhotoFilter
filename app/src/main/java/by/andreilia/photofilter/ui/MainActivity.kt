@@ -21,7 +21,9 @@ class MainActivity : ComponentActivity() {
             AppTheme {
                 PhotoFilterApp(
                     state = state,
-                    selectPhoto = viewModel::selectPhoto
+                    selectPhoto = viewModel::selectPhoto,
+                    onIntensityChange = viewModel::setIntensity,
+                    selectFilter = viewModel::selectFilter
                 )
             }
         }

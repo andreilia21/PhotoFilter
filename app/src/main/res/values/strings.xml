@@ -1,3 +1,7 @@
 <resources>
     <string translatable="false" name="app_name">PhotoFilter</string>
+    <string name="filter_original">Original</string>
+    <string name="filter_sepia">Sepia</string>
+    <string name="filter_vignette">Vignette</string>
+    <string name="filter_negative">Negative</string>
 </resources>

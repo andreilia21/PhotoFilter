@@ -4,6 +4,10 @@
     <string name="filter_sepia">Sepia</string>
     <string name="filter_vignette">Vignette</string>
     <string name="filter_negative">Negative</string>
-    <string name="old_times">Old times</string>
-    <string name="milk">Milk</string>
+    <string name="filter_old_times">Old times</string>
+    <string name="filter_milk">Milk</string>
+    <string name="image_saved">Image successfully saved</string>
+    <string name="image_save_failure">An error occurred during image save</string>
+    <string name="save_button_title">Save</string>
+    <string name="filters_title">FILTERS</string>
 </resources>

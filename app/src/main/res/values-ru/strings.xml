@@ -4,6 +4,10 @@
     <string name="filter_sepia">Сепия</string>
     <string name="filter_vignette">Виньетка</string>
     <string name="filter_negative">Негатив</string>
-    <string name="old_times">Былое</string>
-    <string name="milk">Молоко</string>
+    <string name="filter_old_times">Былое</string>
+    <string name="filter_milk">Молоко</string>
+    <string name="image_saved">Изображение успешно сохранено</string>
+    <string name="image_save_failure">Произошла ошибка при сохранении изображении</string>
+    <string name="save_button_title">Сохранить</string>
+    <string name="filters_title">Фильтры</string>
 </resources>

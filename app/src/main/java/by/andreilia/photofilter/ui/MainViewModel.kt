@@ -1,6 +1,7 @@
 package by.andreilia.photofilter.ui
 
 import android.app.Application
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -8,12 +9,16 @@ import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import jp.co.cyberagent.android.gpuimage.GPUImage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +26,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+
 
 class MainViewModel(
     private val application: Application,
@@ -92,6 +101,45 @@ class MainViewModel(
 
     fun setIntensity(intensity: Float) {
         savedStateHandle["intensity"] = intensity
+    }
+
+    suspend fun saveImage() = withContext(Dispatchers.IO) {
+        val image = selectedPhoto.value ?: return@withContext
+        val filter = selectedFilter.value
+        val intensity = intensity.value
+
+        val result = filter.applyTo(gpuImage, image, intensity).asAndroidBitmap()
+        val fileName = "IMG_${System.currentTimeMillis()}.png"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.TITLE, fileName)
+                put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+            }
+
+            val contentResolver = application.contentResolver
+            val uri: Uri? =
+                contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+
+            uri?.let {
+                val fileDescriptor = contentResolver.openFileDescriptor(it, "w")?.fileDescriptor
+
+                fileDescriptor?.let { descriptor ->
+                    val outputStream = FileOutputStream(descriptor)
+                    result.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                    outputStream.close()
+                }
+            }
+        } else {
+            val sd = Environment.getExternalStorageDirectory()
+            val dest = File(sd, fileName)
+
+            val bitmap = result
+            val out = FileOutputStream(dest)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            out.close()
+        }
     }
 }
 

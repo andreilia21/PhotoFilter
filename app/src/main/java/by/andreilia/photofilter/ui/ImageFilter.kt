@@ -83,7 +83,7 @@ enum class ImageFilter(
         }
     },
     OldTimes(
-        title = R.string.old_times,
+        title = R.string.filter_old_times,
         intensityAvailable = true
     ) {
         override fun applyTo(
@@ -107,7 +107,7 @@ enum class ImageFilter(
         }
     },
     Milk(
-        title = R.string.milk,
+        title = R.string.filter_milk,
         intensityAvailable = true
     ) {
         override fun applyTo(

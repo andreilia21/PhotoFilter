@@ -23,7 +23,8 @@ class MainActivity : ComponentActivity() {
                     state = state,
                     selectPhoto = viewModel::selectPhoto,
                     onIntensityChange = viewModel::setIntensity,
-                    selectFilter = viewModel::selectFilter
+                    selectFilter = viewModel::selectFilter,
+                    savePhoto = viewModel::saveImage
                 )
             }
         }

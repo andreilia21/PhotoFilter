@@ -36,9 +36,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,8 +58,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
+import by.andreilia.photofilter.R
 import by.andreilia.photofilter.ui.theme.AppTheme
 import jp.co.cyberagent.android.gpuimage.GPUImage
+import kotlinx.coroutines.launch
 
 @Preview(showSystemUi = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -64,7 +72,7 @@ fun ScreenPreview() {
     val imageBitmap = remember {
         ContextCompat.getDrawable(
             context,
-            by.andreilia.photofilter.R.drawable.ic_launcher_background
+            R.drawable.ic_launcher_background
         )?.toBitmap()?.asImageBitmap()
     }
 
@@ -87,7 +95,7 @@ fun ScreenPreview() {
     }
 
     AppTheme {
-        PhotoFilterApp(state = state, selectPhoto = {}, onIntensityChange = {}, selectFilter = {})
+        PhotoFilterApp(state = state, selectPhoto = {}, onIntensityChange = {}, selectFilter = {}, savePhoto = {})
     }
 }
 
@@ -136,7 +144,8 @@ fun PhotoFilterApp(
     state: UiState,
     selectPhoto: (Uri) -> Unit,
     onIntensityChange: (Float) -> Unit,
-    selectFilter: (ImageFilter) -> Unit
+    selectFilter: (ImageFilter) -> Unit,
+    savePhoto: suspend () -> Unit
 ) {
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -144,7 +153,16 @@ fun PhotoFilterApp(
         uri?.let { selectPhoto(uri) }
     }
 
+    var savingPhoto by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarState = remember { SnackbarHostState() }
+
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarState
+            )
+        },
         contentWindowInsets = WindowInsets.statusBars
     ) { paddingValues ->
         Column(
@@ -225,19 +243,34 @@ fun PhotoFilterApp(
                     }
                     Text(
                         modifier = Modifier.align(alignment = Alignment.Center),
-                        text = "FILTERS",
+                        text = stringResource(R.string.filters_title),
                         fontSize = 16.sp,
                         letterSpacing = 0.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
+                    val successMessage = stringResource(R.string.image_saved)
+                    val failureMessage = stringResource(R.string.image_save_failure)
                     Button(
                         modifier = Modifier.align(alignment = Alignment.CenterEnd),
                         onClick = {
-
+                            if (!savingPhoto) {
+                                savingPhoto = true
+                                coroutineScope.launch {
+                                    try {
+                                        savePhoto()
+                                        snackbarState.showSnackbar(successMessage)
+                                    } catch (e: Exception) {
+                                        snackbarState.showSnackbar(failureMessage)
+                                        e.printStackTrace()
+                                    } finally {
+                                        savingPhoto = false
+                                    }
+                                }
+                            }
                         },
-                        enabled = state is UiState.PhotoSelected
+                        enabled = state is UiState.PhotoSelected && !savingPhoto
                     ) {
-                        Text("Save")
+                        Text(stringResource(R.string.save_button_title))
                     }
                 }
             }

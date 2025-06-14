@@ -11,6 +11,6 @@ sealed interface UiState {
         val imageBitmap: ImageBitmap,
         val filter: ImageFilter,
         val previews: List<FilterPreview>,
-        val intensity: Float = 0.5f
+        val intensity: Float
     ) : UiState
 }

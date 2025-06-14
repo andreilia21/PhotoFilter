@@ -41,6 +41,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -66,7 +67,6 @@ import kotlinx.coroutines.launch
 @Preview(showSystemUi = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun ScreenPreview() {
-
     val context = LocalContext.current
 
     val imageBitmap = remember {
@@ -195,7 +195,14 @@ fun PhotoFilterApp(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 val value = (state as? UiState.PhotoSelected)?.intensity
-                Slider(value = value ?: 0.5f, onValueChange = onIntensityChange, enabled = state is UiState.PhotoSelected && state.filter.intensityAvailable)
+                var localValue by remember(value) { mutableFloatStateOf(value ?: 0.5f) }
+
+                Slider(
+                    value = localValue,
+                    onValueChange = { localValue = it },
+                    enabled = state is UiState.PhotoSelected && state.filter.intensityAvailable,
+                    onValueChangeFinished = { onIntensityChange(localValue) }
+                )
             }
             Column(
                 modifier = Modifier

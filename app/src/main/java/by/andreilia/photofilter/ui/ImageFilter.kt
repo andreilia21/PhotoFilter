@@ -79,12 +79,17 @@ enum class ImageFilter(
         ): ImageBitmap {
             gpuImage.setImage(bitmap.asAndroidBitmap())
             gpuImage.setFilter(GPUImageNegativeFilter())
+//            gpuImage.setFilter(GPUImageColorMatrixFilter(1f, floatArrayOf(
+//                -1f, 0f, 0f, 1f,
+//                0f, -1f, 0f, 1f,
+//                0f, 0f, -1f, 1f,
+//                0f, 0f, 0f, 1f
+//            )))
             return gpuImage.bitmapWithFilterApplied.asImageBitmap()
         }
     },
     OldTimes(
-        title = R.string.filter_old_times,
-        intensityAvailable = true
+        title = R.string.filter_old_times
     ) {
         override fun applyTo(
             gpuImage: GPUImage,
@@ -107,8 +112,7 @@ enum class ImageFilter(
         }
     },
     Milk(
-        title = R.string.filter_milk,
-        intensityAvailable = true
+        title = R.string.filter_milk
     ) {
         override fun applyTo(
             gpuImage: GPUImage,

@@ -1,6 +1,5 @@
 package by.andreilia.photofilter.ui
 
-import android.R.attr.bitmap
 import android.app.Application
 import android.content.ContentValues
 import android.content.Context
@@ -8,12 +7,10 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
-import android.graphics.Matrix
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
